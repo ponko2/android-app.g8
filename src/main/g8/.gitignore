@@ -1,0 +1,6 @@
+.DS_Store
+Thumbs.db
+target/
+lib_managed/
+src_managed/
+project/boot/
