@@ -3,6 +3,7 @@ import Keys._
 import AndroidKeys._
 
 object BuildSettings {
+  val buildName         = "$name$"
   val buildOrganization = "$organization$"
   val buildVersion      = "0.1.0"
   val buildScalaVersion = "$scala_version$"
@@ -10,11 +11,16 @@ object BuildSettings {
   val buildKeyalias     = "$keyalias$"
 
   val buildSettings = Defaults.defaultSettings ++ Seq (
+    name         := buildName,
     organization := buildOrganization,
     version      := buildVersion,
     scalaVersion := buildScalaVersion,
     shellPrompt  := ShellPrompt.buildShellPrompt,
     platformName in Android := buildPlatformName
+  )
+
+  val proguardSettings = Seq (
+    useProguard in Android := $use_proguard$
   )
 
   val androidSettings = AndroidProject.androidSettings ++
@@ -46,7 +52,9 @@ object ShellPrompt {
 }
 
 object Dependencies {
-  val scalatest = "org.scalatest" %% "scalatest" % "1.6.1" % "test"
+  val scalatestVersion = "$scalatest_version$"
+
+  val scalatest = "org.scalatest" %% "scalatest" % scalatestVersion % "test"
 }
 
 object AndroidBuild extends Build {
@@ -57,16 +65,19 @@ object AndroidBuild extends Build {
   val testsDeps = Seq(scalatest)
 
   lazy val main = Project (
-    "$name$",
+    buildName.replace(" ","-").toLowerCase,
     file("."),
-    settings = buildSettings ++ BuildSettings.androidSettings ++
+    settings = buildSettings ++
+      androidSettings ++
       Seq(libraryDependencies ++= mainDeps)
-  ) dependsOn (tests)
+  )
 
   lazy val tests = Project (
     "tests",
     file("tests"),
-    settings = buildSettings ++ AndroidTest.androidSettings ++
-      Seq(libraryDependencies ++= testsDeps)
-  )
+    settings = buildSettings ++
+      proguardSettings ++
+      AndroidTest.androidSettings ++
+      Seq(name := buildName + " Tests", libraryDependencies ++= testsDeps)
+  ) dependsOn (main)
 }
